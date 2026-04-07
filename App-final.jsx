@@ -28,69 +28,6 @@ const LAYERS = [
 let NODES_DATA = [];
 let LINKS_DATA = [];
 
-// ═══════════════════════════════════════════════════════════
-// ZOOM LEVELS — Google Maps approach to supply chain clarity
-// ═══════════════════════════════════════════════════════════
-
-// LEVEL 1: Critical Path (~32 nodes)
-// Monopolies, sole sources, and irreplaceable chokepoints.
-// If any of these break, the AI supply chain breaks.
-const TIER_1 = new Set([
-  // Raw Materials — sole sources
-  "spruce_pine", "shin_etsu_wafer",
-  // Equipment — monopolies
-  "asml", "zeiss", "trumpf",
-  // Fabrication — irreplaceable
-  "tsmc", "samsung_fab", "sk_hynix", "cowos", "micron",
-  // Chip Design — dominant
-  "nvidia", "amd", "broadcom", "google_tpu",
-  // Networking — chokepoints
-  "nvidia_networking", "nvlink", "arista",
-  // Systems — primary assembler
-  "smci",
-  // Cloud — where AI runs
-  "microsoft_azure", "aws", "google_cloud", "meta_infra", "coreweave", "oracle_cloud",
-  // AI Labs — frontier models
-  "openai", "anthropic", "google_deepmind", "meta_ai", "xai",
-  // Products — where tokens meet humans
-  "chatgpt", "claude_ai", "gemini_app",
-]);
-
-// LEVEL 2: Major Players (~85 nodes)
-// Significant competitors, alternatives, and important secondary players
-const TIER_2 = new Set([
-  ...TIER_1,
-  // More raw materials
-  "sumco", "neon_gas", "photoresists", "tok", "entegris", "linde_gas",
-  // More equipment
-  "applied_materials", "lam_research", "tokyo_electron", "kla",
-  "synopsys", "cadence", "arm", "advantest", "disco", "screen_holdings",
-  "asm_intl", "lasertec",
-  // More fabrication
-  "intel_foundry", "samsung_memory", "ase_group", "amkor", "smic", "globalfoundries",
-  "cxmt", "ymtc",
-  // More chip design
-  "marvell", "qualcomm", "aws_trainium", "ms_maia", "apple_silicon",
-  "intel_gpu", "cerebras", "groq", "huawei_ascend", "tenstorrent",
-  // More networking
-  "broadcom_nw", "cisco_dc", "coherent", "lumentum", "innolight",
-  "eoptolink", "fabrinet", "celestica",
-  // More systems
-  "dell_servers", "hpe_servers", "foxconn", "quanta", "vertiv",
-  "schneider", "eaton",
-  // More cloud
-  "lambda_cloud", "equinix", "digital_realty", "nebius", "crusoe",
-  // More AI labs
-  "mistral", "deepseek", "cohere", "eleven_labs", "runway_ml",
-  "hugging_face", "stability",
-  // More products
-  "github_copilot", "claude_code", "cursor", "perplexity",
-  "copilot_ms", "openai_api", "anthropic_api", "aws_bedrock",
-  "meta_ai_app", "grok_app",
-]);
-
-// LEVEL 3: Full Graph (200+ nodes) — everything
-
 // --- UTILITIES ---
 const LAYER_COLORS = {};
 LAYERS.forEach(l => { LAYER_COLORS[l.id] = l.color; });
@@ -284,8 +221,7 @@ function NodeDetail({ node, onClose, onNavigate }) {
 }
 
 // --- STATS BAR ---
-function StatsBar({ zoomLevel }) {
-  const { nodes, links } = getFilteredData(zoomLevel || 3);
+function StatsBar() {
   return (
     <div style={{
       position: "absolute", bottom: 16, right: 16, background: "rgba(255,255,255,0.95)",
@@ -293,9 +229,9 @@ function StatsBar({ zoomLevel }) {
       display: "flex", gap: 16, alignItems: "center", fontFamily: "var(--mono)",
       boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
     }}>
-      <div><span style={{ fontSize: 15, color: "#111827", fontWeight: 700, fontFamily: "var(--sans)" }}>{nodes.length}</span><span style={{ fontSize: 8, color: "#9ca3af", marginLeft: 3, textTransform: "uppercase", letterSpacing: 1 }}>Nodes</span></div>
+      <div><span style={{ fontSize: 15, color: "#111827", fontWeight: 700, fontFamily: "var(--sans)" }}>{NODES_DATA.length}</span><span style={{ fontSize: 8, color: "#9ca3af", marginLeft: 3, textTransform: "uppercase", letterSpacing: 1 }}>Nodes</span></div>
       <div style={{ width: 1, height: 18, background: "#e5e7eb" }} />
-      <div><span style={{ fontSize: 15, color: "#111827", fontWeight: 700, fontFamily: "var(--sans)" }}>{links.length}</span><span style={{ fontSize: 8, color: "#9ca3af", marginLeft: 3, textTransform: "uppercase", letterSpacing: 1 }}>Links</span></div>
+      <div><span style={{ fontSize: 15, color: "#111827", fontWeight: 700, fontFamily: "var(--sans)" }}>{LINKS_DATA.length}</span><span style={{ fontSize: 8, color: "#9ca3af", marginLeft: 3, textTransform: "uppercase", letterSpacing: 1 }}>Links</span></div>
       <div style={{ width: 1, height: 18, background: "#e5e7eb" }} />
       <div><span style={{ fontSize: 15, color: "#111827", fontWeight: 700, fontFamily: "var(--sans)" }}>{LAYERS.length}</span><span style={{ fontSize: 8, color: "#9ca3af", marginLeft: 3, textTransform: "uppercase", letterSpacing: 1 }}>Layers</span></div>
     </div>
@@ -303,56 +239,7 @@ function StatsBar({ zoomLevel }) {
 }
 
 // === GRAPH COMPONENT (renders after data loads) ===
-// --- ZOOM LEVEL TOGGLE ---
-function ZoomToggle({ level, onSetLevel }) {
-  const levels = [
-    { id: 1, label: "Critical Path", count: TIER_1.size, desc: "Chokepoints & monopolies" },
-    { id: 2, label: "Major Players", count: TIER_2.size, desc: "Key competitors & alternatives" },
-    { id: 3, label: "Full Graph", count: NODES_DATA.length, desc: "Every company tracked" },
-  ];
-  return (
-    <div style={{
-      position: "absolute", top: 64, left: "50%", transform: "translateX(-50%)",
-      zIndex: 20, display: "flex", gap: 2,
-      background: "rgba(255,255,255,0.96)", borderRadius: 10,
-      border: "1px solid #e5e7eb", padding: 3,
-      boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-    }}>
-      {levels.map(l => (
-        <button key={l.id} onClick={() => onSetLevel(l.id)} style={{
-          background: level === l.id ? "#111827" : "transparent",
-          color: level === l.id ? "#fff" : "#6b7280",
-          border: "none", borderRadius: 8, padding: "6px 14px",
-          cursor: "pointer", fontFamily: "var(--mono)", fontSize: 10,
-          fontWeight: level === l.id ? 600 : 400,
-          transition: "all 0.2s",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
-        }}>
-          <span>{l.label}</span>
-          <span style={{ fontSize: 8, opacity: 0.6 }}>{l.count} nodes</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// --- Helper: filter nodes/links by zoom level ---
-function getFilteredData(level) {
-  let tierSet = null;
-  if (level === 1) tierSet = TIER_1;
-  else if (level === 2) tierSet = TIER_2;
-
-  const filteredNodes = tierSet
-    ? NODES_DATA.filter(n => tierSet.has(n.id))
-    : NODES_DATA;
-
-  const nodeIds = new Set(filteredNodes.map(n => n.id));
-  const filteredLinks = LINKS_DATA.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
-
-  return { nodes: filteredNodes, links: filteredLinks };
-}
-
-function GraphView({ zoomLevel }) {
+function GraphView() {
   const svgRef = useRef(null);
   const simRef = useRef(null);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -408,9 +295,8 @@ function GraphView({ zoomLevel }) {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const { nodes: filteredNodes, links: filteredLinks } = getFilteredData(zoomLevel);
-    const nodes = filteredNodes.map(d => ({ ...d }));
-    const links = filteredLinks.map(d => ({ ...d }));
+    const nodes = NODES_DATA.map(d => ({ ...d }));
+    const links = LINKS_DATA.map(d => ({ ...d }));
     const layerCount = LAYERS.length;
     const layerW = width / layerCount;
     nodes.forEach(n => {
@@ -443,14 +329,8 @@ function GraphView({ zoomLevel }) {
         .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
       );
 
-    // Adjust physics based on zoom level
-    const sizeScale = zoomLevel === 1 ? 1.6 : zoomLevel === 2 ? 1.15 : 1;
-    const chargeStr = zoomLevel === 1 ? -600 : zoomLevel === 2 ? -300 : -200;
-    const linkDist = zoomLevel === 1 ? 160 : zoomLevel === 2 ? 100 : 80;
-    const xStr = zoomLevel === 1 ? 0.6 : 0.5;
-
     node.append("circle")
-      .attr("r", d => getRadius(d) * sizeScale)
+      .attr("r", d => getRadius(d))
       .attr("fill", d => `${getColor(d.layer)}12`)
       .attr("stroke", d => getColor(d.layer))
       .attr("stroke-width", 1.5)
@@ -459,12 +339,11 @@ function GraphView({ zoomLevel }) {
     node.each(function(d) {
       const lines = d.label.split("\n");
       const el = d3.select(this);
-      const fs = zoomLevel === 1 ? "10px" : d.label.length > 14 ? "7px" : "8px";
       lines.forEach((line, i) => {
         el.append("text").text(line)
           .attr("text-anchor", "middle")
           .attr("dy", lines.length === 1 ? "0.35em" : `${(i - (lines.length - 1) / 2) * 1.1 + 0.35}em`)
-          .attr("fill", "#374151").attr("font-size", fs)
+          .attr("fill", "#374151").attr("font-size", d.label.length > 14 ? "7px" : "8px")
           .attr("font-family", "'IBM Plex Mono', monospace").attr("font-weight", "500")
           .attr("pointer-events", "none");
       });
@@ -475,12 +354,12 @@ function GraphView({ zoomLevel }) {
     svg.on("click", () => { setSelectedNode(null); setPathNodes(null); });
 
     const sim = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(d => d.id).distance(linkDist).strength(0.25))
-      .force("charge", d3.forceManyBody().strength(chargeStr))
+      .force("link", d3.forceLink(links).id(d => d.id).distance(80).strength(0.25))
+      .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("x", d3.forceX(d => (d.layer / (layerCount - 1)) * (width - 250) + 125).strength(xStr))
+      .force("x", d3.forceX(d => (d.layer / (layerCount - 1)) * (width - 250) + 125).strength(0.5))
       .force("y", d3.forceY(height / 2).strength(0.04))
-      .force("collision", d3.forceCollide().radius(d => getRadius(d) * sizeScale + 8))
+      .force("collision", d3.forceCollide().radius(d => getRadius(d) + 5))
       .on("tick", () => {
         link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
           .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
@@ -492,7 +371,7 @@ function GraphView({ zoomLevel }) {
       svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(width * 0.02, height * 0.08).scale(0.7));
     }, 600);
     return () => sim.stop();
-  }, [dims, tracePath, zoomLevel]);
+  }, [dims, tracePath]);
 
   useEffect(() => {
     if (!simRef.current) return;
@@ -554,7 +433,7 @@ function GraphView({ zoomLevel }) {
   return (
     <>
       <div style={{
-        position: "absolute", top: 100, left: "50%", transform: "translateX(-50%)",
+        position: "absolute", top: 50, left: "50%", transform: "translateX(-50%)",
         zIndex: 15, fontSize: 9, color: "#d1d5db", fontFamily: "var(--mono)", pointerEvents: "none",
       }}>
         Click a node to inspect · Double-click to trace path · Scroll to zoom · Drag to pan
@@ -568,8 +447,8 @@ function GraphView({ zoomLevel }) {
       <LayerLegend layers={LAYERS} activeLayer={activeLayer}
         onLayerClick={id => { setActiveLayer(prev => prev === id ? null : id); setPathNodes(null); }}
         pathActive={!!pathNodes} />
-      <SearchBar nodes={getFilteredData(zoomLevel).nodes} onSelect={navigateToNode} onTrace={traceFullPath} />
-      {!selectedNode && <StatsBar zoomLevel={zoomLevel} />}
+      <SearchBar nodes={NODES_DATA} onSelect={navigateToNode} onTrace={traceFullPath} />
+      {!selectedNode && <StatsBar />}
       <NodeDetail node={selectedNode} onClose={() => setSelectedNode(null)} onNavigate={navigateToNode} />
     </>
   );
@@ -579,7 +458,6 @@ function GraphView({ zoomLevel }) {
 export default function AIStack() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
 
   useEffect(() => {
     async function fetchData() {
@@ -656,10 +534,7 @@ export default function AIStack() {
           <div style={{ color: "#9ca3af", fontSize: 12, fontFamily: "var(--mono)" }}>{error}</div>
         </div>
       ) : (
-        <>
-          <ZoomToggle level={zoomLevel} onSetLevel={setZoomLevel} />
-          <GraphView zoomLevel={zoomLevel} />
-        </>
+        <GraphView />
       )}
     </div>
   );
