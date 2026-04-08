@@ -191,45 +191,54 @@ function getRadius(node) {
 
 // --- LAYER LEGEND ---
 function LayerLegend({ layers, activeLayer, onLayerClick, pathActive }) {
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <div style={{
       position: "absolute", top: 64, left: 16, background: "rgba(255,255,255,0.96)",
-      borderRadius: 12, padding: "12px 14px", zIndex: 20,
+      borderRadius: 12, padding: collapsed ? "8px 12px" : "12px 14px", zIndex: 20,
       border: "1px solid #e5e7eb", boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-      backdropFilter: "blur(12px)", minWidth: 200,
+      backdropFilter: "blur(12px)", minWidth: collapsed ? 0 : 200,
+      transition: "all 0.2s",
     }}>
-      <div style={{ fontSize: 9, letterSpacing: 2, color: "#9ca3af", marginBottom: 8, fontFamily: "var(--mono)", textTransform: "uppercase" }}>
-        Supply Chain Layers
+      <div onClick={() => setCollapsed(!collapsed)} style={{
+        fontSize: 9, letterSpacing: 2, color: "#9ca3af", marginBottom: collapsed ? 0 : 8,
+        fontFamily: "var(--mono)", textTransform: "uppercase", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <span>Supply Chain Layers</span>
+        <span style={{ fontSize: 12, marginLeft: 8 }}>{collapsed ? "▶" : "▼"}</span>
       </div>
-      {layers.map(l => {
-        const isActive = activeLayer === null || activeLayer === l.id;
-        return (
-          <div key={l.id} onClick={() => onLayerClick(l.id)} style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "4px 8px", borderRadius: 6, cursor: "pointer",
-            opacity: isActive ? 1 : 0.3,
-            background: activeLayer === l.id ? `${l.color}0a` : "transparent",
-            transition: "all 0.2s", marginBottom: 1,
-          }}>
-            <div style={{ width: 9, height: 9, borderRadius: "50%", background: l.color, flexShrink: 0, boxShadow: `0 0 4px ${l.color}33` }} />
-            <div>
-              <div style={{ fontSize: 11, color: "#374151", fontWeight: 500, fontFamily: "var(--sans)" }}>{l.name}</div>
-              <div style={{ fontSize: 8, color: "#9ca3af", fontFamily: "var(--mono)" }}>{l.desc}</div>
+      {!collapsed && <>
+        {layers.map(l => {
+          const isActive = activeLayer === null || activeLayer === l.id;
+          return (
+            <div key={l.id} onClick={() => onLayerClick(l.id)} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "4px 8px", borderRadius: 6, cursor: "pointer",
+              opacity: isActive ? 1 : 0.3,
+              background: activeLayer === l.id ? `${l.color}0a` : "transparent",
+              transition: "all 0.2s", marginBottom: 1,
+            }}>
+              <div style={{ width: 9, height: 9, borderRadius: "50%", background: l.color, flexShrink: 0, boxShadow: `0 0 4px ${l.color}33` }} />
+              <div>
+                <div style={{ fontSize: 11, color: "#374151", fontWeight: 500, fontFamily: "var(--sans)" }}>{l.name}</div>
+                <div style={{ fontSize: 8, color: "#9ca3af", fontFamily: "var(--mono)" }}>{l.desc}</div>
+              </div>
             </div>
+          );
+        })}
+        {activeLayer !== null && (
+          <div onClick={() => onLayerClick(null)} style={{
+            marginTop: 6, fontSize: 10, color: "#6b7280", cursor: "pointer", textAlign: "center",
+            padding: "3px 6px", borderRadius: 4, border: "1px solid #e5e7eb", fontFamily: "var(--mono)",
+          }}>Show all</div>
+        )}
+        {pathActive && (
+          <div style={{ marginTop: 6, fontSize: 9, color: "#059669", textAlign: "center", fontFamily: "var(--mono)" }}>
+            ● Path trace active — click background to clear
           </div>
-        );
-      })}
-      {activeLayer !== null && (
-        <div onClick={() => onLayerClick(null)} style={{
-          marginTop: 6, fontSize: 10, color: "#6b7280", cursor: "pointer", textAlign: "center",
-          padding: "3px 6px", borderRadius: 4, border: "1px solid #e5e7eb", fontFamily: "var(--mono)",
-        }}>Show all</div>
-      )}
-      {pathActive && (
-        <div style={{ marginTop: 6, fontSize: 9, color: "#059669", textAlign: "center", fontFamily: "var(--mono)" }}>
-          ● Path trace active — click background to clear
-        </div>
-      )}
+        )}
+      </>}
     </div>
   );
 }
@@ -442,17 +451,24 @@ function GeoToggle({ active, onToggle }) {
 
 // --- GEO RISK LEGEND ---
 function GeoLegend() {
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <div style={{
       position: "absolute", top: 64, left: 16, background: "rgba(255,255,255,0.96)",
-      borderRadius: 12, padding: "12px 14px", zIndex: 20,
+      borderRadius: 12, padding: collapsed ? "8px 12px" : "12px 14px", zIndex: 20,
       border: "1px solid #e5e7eb", boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-      backdropFilter: "blur(12px)", minWidth: 200,
+      backdropFilter: "blur(12px)", minWidth: collapsed ? 0 : 200,
+      transition: "all 0.2s",
     }}>
-      <div style={{ fontSize: 9, letterSpacing: 2, color: "#9ca3af", marginBottom: 8, fontFamily: "var(--mono)", textTransform: "uppercase" }}>
-        Geopolitical Risk — Mfg Location
+      <div onClick={() => setCollapsed(!collapsed)} style={{
+        fontSize: 9, letterSpacing: 2, color: "#9ca3af", marginBottom: collapsed ? 0 : 8,
+        fontFamily: "var(--mono)", textTransform: "uppercase", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <span>Geopolitical Risk — Mfg Location</span>
+        <span style={{ fontSize: 12, marginLeft: 8 }}>{collapsed ? "▶" : "▼"}</span>
       </div>
-      {Object.entries(GEO_BLOCS).map(([key, bloc]) => (
+      {!collapsed && Object.entries(GEO_BLOCS).map(([key, bloc]) => (
         <div key={key} style={{
           display: "flex", alignItems: "center", gap: 8,
           padding: "4px 8px", marginBottom: 1,
@@ -613,8 +629,8 @@ function GraphView({ zoomLevel, geoMode }) {
     const sim = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id).distance(linkDist).strength(0.25))
       .force("charge", d3.forceManyBody().strength(chargeStr))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("x", d3.forceX(d => (d.layer / (layerCount - 1)) * (width - 250) + 125).strength(xStr))
+      .force("center", d3.forceCenter(width / 2 + 80, height / 2))
+      .force("x", d3.forceX(d => (d.layer / (layerCount - 1)) * (width - 350) + 200).strength(xStr))
       .force("y", d3.forceY(height / 2).strength(0.04))
       .force("collision", d3.forceCollide().radius(d => getRadius(d) * sizeScale + 8))
       .on("tick", () => {
@@ -625,7 +641,7 @@ function GraphView({ zoomLevel, geoMode }) {
 
     simRef.current = { sim, node, link, nodes, links, svg, g, zoom };
     setTimeout(() => {
-      svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(width * 0.02, height * 0.08).scale(0.7));
+      svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(width * 0.12, height * 0.08).scale(0.7));
     }, 600);
     return () => sim.stop();
   }, [dims, tracePath, zoomLevel, geoMode]);
@@ -691,7 +707,7 @@ function GraphView({ zoomLevel, geoMode }) {
     <>
       <div style={{
         position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)",
-        zIndex: 15, fontSize: 9, color: "#d1d5db", fontFamily: "var(--mono)", pointerEvents: "none",
+        zIndex: 15, fontSize: 9, color: "#374151", fontFamily: "var(--mono)", pointerEvents: "none",
       }}>
         Click a node to inspect · Double-click to trace path · Scroll to zoom · Drag to pan
       </div>
