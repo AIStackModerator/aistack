@@ -822,6 +822,53 @@ export default function AIStack() {
             <ZoomToggle level={zoomLevel} onSetLevel={setZoomLevel} />
             <GeoToggle active={geoMode} onToggle={() => setGeoMode(!geoMode)} />
           </div>
+          {/* Social links — bottom left */}
+          <div style={{
+            position: "absolute", bottom: 18, left: 16, zIndex: 20,
+            display: "flex", gap: 10, alignItems: "center",
+          }}>
+            {/* X / Twitter */}
+            <a href="https://x.com/GraphAIStack" target="_blank" rel="noopener noreferrer"
+              title="Follow @GraphAIStack on X"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center",
+                width: 32, height: 32, borderRadius: 8,
+                background: "rgba(255,255,255,0.96)", border: "1px solid #e5e7eb",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textDecoration: "none",
+                transition: "all 0.2s",
+              }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#374151">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            {/* Email */}
+            <a href="mailto:graph.ai.stack@gmail.com"
+              title="Email us"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center",
+                width: 32, height: 32, borderRadius: 8,
+                background: "rgba(255,255,255,0.96)", border: "1px solid #e5e7eb",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textDecoration: "none",
+                transition: "all 0.2s",
+              }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M22 4L12 13L2 4"/>
+              </svg>
+            </a>
+            {/* Newsletter / Beehiiv */}
+            <a href="https://graphaistack.beehiiv.com/" target="_blank" rel="noopener noreferrer"
+              title="Subscribe to newsletter"
+              style={{ display: "flex", alignItems: "center", justifyContent: "center",
+                width: 32, height: 32, borderRadius: 8,
+                background: "rgba(255,255,255,0.96)", border: "1px solid #e5e7eb",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)", textDecoration: "none",
+                transition: "all 0.2s",
+              }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/>
+                <path d="M18 14H10"/><path d="M18 18H10"/><path d="M10 6h8v4h-8z"/>
+              </svg>
+            </a>
+          </div>
         </>
       )}
     </div>
