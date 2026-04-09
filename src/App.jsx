@@ -403,7 +403,7 @@ function ZoomToggle({ level, onSetLevel }) {
   const levels = [
     { id: 1, label: "Critical Path", count: TIER_1.size, desc: "Chokepoints & monopolies" },
     { id: 2, label: "Major Players", count: TIER_2.size, desc: "Key competitors & alternatives" },
-    { id: 3, label: "Full Graph", count: NODES_DATA.length, desc: "Every company tracked" },
+    { id: 3, label: "Comprehensive", count: NODES_DATA.length, desc: "Every company tracked" },
   ];
   return (
     <div style={{
@@ -581,7 +581,7 @@ function GraphView({ zoomLevel, geoMode }) {
     filt.append("feDropShadow").attr("dx", 0).attr("dy", 1).attr("stdDeviation", 2).attr("flood-color", "#000").attr("flood-opacity", 0.06);
 
     const link = g.append("g").selectAll("line").data(links).enter().append("line")
-      .attr("stroke", "#e5e7eb").attr("stroke-width", 0.8).attr("marker-end", "url(#arr)");
+      .attr("stroke", "#e5e7eb").attr("stroke-width", 0.5).attr("opacity", 0.5).attr("marker-end", "url(#arr)");
 
     const node = g.append("g").selectAll("g").data(nodes).enter().append("g")
       .attr("cursor", "pointer")
@@ -601,9 +601,17 @@ function GraphView({ zoomLevel, geoMode }) {
       ? (d) => getGeoColor(d.id)
       : (d) => getColor(d.layer);
 
+    // White background circle to cover links behind nodes
     node.append("circle")
+      .attr("class", "node-bg")
+      .attr("r", d => getRadius(d) * sizeScale + 2)
+      .attr("fill", "#fafbfc")
+      .attr("stroke", "none");
+
+    node.append("circle")
+      .attr("class", "node-color")
       .attr("r", d => getRadius(d) * sizeScale)
-      .attr("fill", d => `${nodeColor(d)}18`)
+      .attr("fill", d => `${nodeColor(d)}25`)
       .attr("stroke", d => nodeColor(d))
       .attr("stroke-width", 1.5)
       .attr("filter", "url(#ns)");
@@ -649,13 +657,19 @@ function GraphView({ zoomLevel, geoMode }) {
   useEffect(() => {
     if (!simRef.current) return;
     const { node, link } = simRef.current;
-    node.select("circle").transition().duration(300)
+    node.select(".node-color").transition().duration(300)
       .attr("opacity", d => {
         if (pathNodes) return pathNodes.has(d.id) ? 1 : 0.06;
         if (activeLayer === null) return 1;
         return d.layer === activeLayer ? 1 : 0.08;
       })
       .attr("stroke-width", d => pathNodes?.has(d.id) ? 2.5 : 1.5);
+    node.select(".node-bg").transition().duration(300)
+      .attr("opacity", d => {
+        if (pathNodes) return pathNodes.has(d.id) ? 1 : 0.06;
+        if (activeLayer === null) return 1;
+        return d.layer === activeLayer ? 1 : 0.08;
+      });
     node.selectAll("text").transition().duration(300)
       .attr("opacity", d => {
         if (pathNodes) return pathNodes.has(d.id) ? 1 : 0.04;
